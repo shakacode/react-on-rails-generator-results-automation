@@ -29,7 +29,7 @@ RESULT_TYPES.each do |result_type|
     sh %(cd #{DIRECTORY} && spring stop)
 
     generator_options = ""
-    result_type[1].split(/-/, 2).each do |name_part|
+    result_type.split(/-/, 2).each do |name_part|
       generator_options += " --#{name_part}" if GENERATOR_OPTIONS.include?(name_part)
     end
 
@@ -48,7 +48,7 @@ task :gen_all, [:version] do |_task, args|
   end
 end
 
-desc "creates additional comparison project on each of the 4 branches"
+desc "creates additional comparison branches"
 task "compare_all", [:version] do |_task, args|
   COMPARISON_TYPES.each do |comparison_type|
     base_branch = "#{comparison_type[0]}-#{args[:version]}"
@@ -60,7 +60,8 @@ task "compare_all", [:version] do |_task, args|
     mv(git_folder, PARENT_DIRECTORY)
 
     rm_rf(DIRECTORY)
-    sh %(cd #{PARENT_DIRECTORY} && rails new #{DIRECTORY_NAME} --skip-bundle)
+    sh %(cd #{PARENT_DIRECTORY} && rails new #{DIRECTORY_NAME})
+    sh %(cd #{DIRECTORY} && spring stop)
 
     # Put .git folder back
     mv(tmp_git_folder, DIRECTORY)
@@ -129,8 +130,9 @@ desc "default: runs all (runs everything)"
 task default: ["all"]
 
 desc "Delete branches for given version number"
-task :delete_branches do |_task, args|
+task :delete_branches, [:version] do |_task, args|
   sh %(cd #{DIRECTORY} && git checkout #{START_BRANCH})
+  sh %(cd #{DIRECTORY} && git remote prune origin)
   RESULT_TYPES.each do |result_type|
     branch_name = "#{result_type}-#{args[:version]}"
     sh %(cd #{DIRECTORY} && git branch -D #{branch_name})
