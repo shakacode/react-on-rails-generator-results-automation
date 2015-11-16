@@ -29,7 +29,7 @@ RESULT_TYPES.each do |result_type|
     sh %(cd #{DIRECTORY} && spring stop)
 
     generator_options = ""
-    comparison_type[1].split(/-/, 2).each do |name_part|
+    result_type[1].split(/-/, 2).each do |name_part|
       generator_options += " --#{name_part}" if GENERATOR_OPTIONS.include?(name_part)
     end
 
@@ -128,13 +128,27 @@ end
 desc "default: runs all (runs everything)"
 task default: ["all"]
 
+desc "Delete branches for given version number"
+task :delete_branches do |_task, args|
+  sh %(cd #{DIRECTORY} && git checkout #{START_BRANCH})
+  RESULT_TYPES.each do |result_type|
+    branch_name = "#{result_type}-#{args[:version]}"
+    sh %(cd #{DIRECTORY} && git branch -D #{branch_name})
+  end
+  COMPARISON_TYPES.each do |comparison_type|
+    branch_name = "#{comparison_type[0]}-to-#{comparison_type[1]}-comparison-#{args[:version]}"
+    sh %(cd #{DIRECTORY} && git branch -D #{branch_name})
+  end
+  puts "All Branches for version #{args[:version]} Deleted!"
+end
+
 private
 
 def add_gems
   gemfile = File.join(DIRECTORY, "Gemfile")
   gemfile_additions = "source 'https://rubygems.org'\n\n"
-  gemfile_additions << "gem 'react_on_rails', path: '../react_on_rails'\n"
-  gemfile_additions << "gem 'therubyracer'"
+  gemfile_additions << "gem 'react_on_rails', git: 'https://github.com/shakacode/react_on_rails.git'\n"
+  gemfile_additions << "gem 'therubyracer'\n"
 
   old_gemfile_text = File.read(gemfile)
   new_gemfile_text = old_gemfile_text.gsub(/^source .*\n/, gemfile_additions)
@@ -148,3 +162,5 @@ end
 
 #   sh %(echo "#{globs.join('\n')}" >> #{DIRECTORY})
 # end
+
+
