@@ -149,20 +149,9 @@ private
 def add_gems
   gemfile = File.join(DIRECTORY, "Gemfile")
   gemfile_additions = "source 'https://rubygems.org'\n\n"
-  gemfile_additions << "gem 'react_on_rails', git: 'https://github.com/shakacode/react_on_rails.git'\n"
-  gemfile_additions << "gem 'therubyracer'\n"
+  gemfile_additions << "gem 'react_on_rails', path: '../react_on_rails'\n"
 
   old_gemfile_text = File.read(gemfile)
   new_gemfile_text = old_gemfile_text.gsub(/^source .*\n/, gemfile_additions)
   File.open(gemfile, "w") { |file| file.puts(new_gemfile_text) }
 end
-
-# def add_to_gitignore
-#   globs = %w(**/node_modules/**
-#              **/javascripts/generated/**
-#              **/npm-debug.log.*)
-
-#   sh %(echo "#{globs.join('\n')}" >> #{DIRECTORY})
-# end
-
-
