@@ -2,14 +2,15 @@
 # You must pass in a version number so that the branches will be unique. For example:
 #   rake all[10] will generate all results with a "-10" suffix on the branches.
 
-RESULT_TYPES = %w(basic basic-server-rendering redux redux-server-rendering basic-heroku-deployment)
-GENERATOR_OPTIONS = %w(redux server-rendering heroku-deployment)
+RESULT_TYPES = %w(basic basic-server-rendering redux redux-server-rendering basic-heroku-deployment basic-skip-bootstrap)
+GENERATOR_OPTIONS = %w(redux server-rendering heroku-deployment skip-bootstrap)
 COMPARISON_TYPES = [
   ["basic", "basic-server-rendering"],
   ["redux", "redux-server-rendering"],
   ["basic-server-rendering", "redux-server-rendering"],
   ["basic", "redux"],
-  ["basic", "basic-heroku-deployment"]
+  ["basic", "basic-heroku-deployment"],
+  ["basic", "basic-skip-bootstrap"]
 ]
 REPO_NAME = "react_on_rails-generator-results"
 GIT_REMOTE = "origin"
