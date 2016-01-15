@@ -11,7 +11,7 @@ COMPARISON_TYPES = [
   ["basic", "redux"],
   ["basic", "basic-heroku-deployment"]
 ]
-REPO_NAME = "react_on_rails-generator-results-v1.0.3"
+REPO_NAME = "react_on_rails-generator-results"
 GIT_REMOTE = "origin"
 START_BRANCH = "fresh-rails-install"
 DIRECTORY = File.expand_path("../../react_on_rails-generator-results", __FILE__)
@@ -28,7 +28,7 @@ RESULT_TYPES.each do |result_type|
     sh %(cd #{DIRECTORY} && bundle install)
     sh %(cd #{DIRECTORY} && spring stop)
 
-    generator_options = ""
+    generator_options = " --ignore-warnings"
     result_type.split(/-/, 2).each do |name_part|
       generator_options += " --#{name_part}" if GENERATOR_OPTIONS.include?(name_part)
     end
@@ -59,6 +59,11 @@ task "compare_all", [:version] do |_task, args|
     tmp_git_folder = File.join(PARENT_DIRECTORY, ".git")
     mv(git_folder, PARENT_DIRECTORY)
 
+    # Keep secrets.yml
+    secrets_yml = File.join(DIRECTORY, "config", "secrets.yml")
+    tmp_secrets_yml = File.join(PARENT_DIRECTORY, "secrets.yml")
+    mv(secrets_yml, PARENT_DIRECTORY)
+
     rm_rf(DIRECTORY)
     sh %(cd #{PARENT_DIRECTORY} && rails new #{DIRECTORY_NAME})
     sh %(cd #{DIRECTORY} && spring stop)
@@ -66,12 +71,16 @@ task "compare_all", [:version] do |_task, args|
     # Put .git folder back
     mv(tmp_git_folder, DIRECTORY)
 
+    # Use original secrets.yml file
+    rm(secrets_yml)
+    mv(tmp_secrets_yml, File.join(DIRECTORY, "config"))
+
     add_gems
 
     sh %(cd #{DIRECTORY} && bundle install)
     sh %(cd #{DIRECTORY} && spring stop)
 
-    generator_options = ""
+    generator_options = " --ignore-warnings"
     comparison_type[1].split(/-/, 2).each do |name_part|
       generator_options += " --#{name_part}" if GENERATOR_OPTIONS.include?(name_part)
     end
