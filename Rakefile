@@ -19,10 +19,17 @@ DIRECTORY = File.expand_path("../../react_on_rails-generator-results", __FILE__)
 DIRECTORY_NAME = File.basename(DIRECTORY)
 PARENT_DIRECTORY = File.expand_path("../.", DIRECTORY)
 
+# Define task to create the start branch
+desc "generate start branch"
+task :gen_start_branch do
+  sh %(cd #{DIRECTORY} && git checkout #{START_BRANCH})
+  fresh_install_of_rails
+end
+
 # Define tasks to generate each result type app
 RESULT_TYPES.each do |result_type|
   desc "generate #{result_type} app"
-  task "gen_#{result_type}", [:version] do |_task, args|
+  task "gen_#{result_type}", [:version] => [:gen_start_branch] do |_task, args|
     sh %(cd #{DIRECTORY} && git checkout #{START_BRANCH})
     sh %(cd #{DIRECTORY} && git checkout -b #{result_type}-#{args[:version]})
     add_gems
@@ -55,26 +62,7 @@ task "compare_all", [:version] do |_task, args|
     base_branch = "#{comparison_type[0]}-#{args[:version]}"
     sh %(cd #{DIRECTORY} && git checkout #{base_branch})
 
-    # Keep .git folder
-    git_folder = File.join(DIRECTORY, ".git")
-    tmp_git_folder = File.join(PARENT_DIRECTORY, ".git")
-    mv(git_folder, PARENT_DIRECTORY)
-
-    # Keep secrets.yml
-    secrets_yml = File.join(DIRECTORY, "config", "secrets.yml")
-    tmp_secrets_yml = File.join(PARENT_DIRECTORY, "secrets.yml")
-    mv(secrets_yml, PARENT_DIRECTORY)
-
-    rm_rf(DIRECTORY)
-    sh %(cd #{PARENT_DIRECTORY} && rails new #{DIRECTORY_NAME})
-    sh %(cd #{DIRECTORY} && spring stop)
-
-    # Put .git folder back
-    mv(tmp_git_folder, DIRECTORY)
-
-    # Use original secrets.yml file
-    rm(secrets_yml)
-    mv(tmp_secrets_yml, File.join(DIRECTORY, "config"))
+    fresh_install_of_rails
 
     add_gems
 
@@ -164,4 +152,27 @@ def add_gems
   old_gemfile_text = File.read(gemfile)
   new_gemfile_text = old_gemfile_text.gsub(/^source .*\n/, gemfile_additions)
   File.open(gemfile, "w") { |file| file.puts(new_gemfile_text) }
+end
+
+def fresh_install_of_rails
+  # Keep .git folder
+  git_folder = File.join(DIRECTORY, ".git")
+  tmp_git_folder = File.join(PARENT_DIRECTORY, ".git")
+  mv(git_folder, PARENT_DIRECTORY)
+
+  # Keep secrets.yml
+  secrets_yml = File.join(DIRECTORY, "config", "secrets.yml")
+  tmp_secrets_yml = File.join(PARENT_DIRECTORY, "secrets.yml")
+  mv(secrets_yml, PARENT_DIRECTORY)
+
+  rm_rf(DIRECTORY)
+  sh %(cd #{PARENT_DIRECTORY} && rails new #{DIRECTORY_NAME})
+  sh %(cd #{DIRECTORY} && spring stop)
+
+  # Put .git folder back
+  mv(tmp_git_folder, DIRECTORY)
+
+  # Use original secrets.yml file
+  rm(secrets_yml)
+  mv(tmp_secrets_yml, File.join(DIRECTORY, "config"))
 end
